@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claudify</title>
+<style>
+  :root {
+    --bg:#fbfbfc; --bg-elev:#ffffff; --sunk:#f4f5f7;
+    --text:#16181d; --text-2:#5b6270; --text-3:#8b92a1;
+    --line:#e7e9ee; --line-2:#dcdfe6;
+    --accent:#5b5bd6; --accent-soft:#eeeefc; --accent-fg:#ffffff;
+    --ok:#0d8a5f; --ok-soft:#e6f5ef;
+    --wait:#1f6feb; --wait-soft:#e8f0fe;
+    --warn:#b45309; --warn-soft:#fdf3e3;
+    --err:#c8352f; --err-soft:#fdecea;
+    --off:#9aa1ae;
+    --shadow-sm:0 1px 2px rgba(16,18,29,.05);
+    --shadow-md:0 4px 14px -4px rgba(16,18,29,.10), 0 1px 3px rgba(16,18,29,.05);
+    --r:14px; --r-sm:9px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0c0d10; --bg-elev:#141619; --sunk:#1b1e23;
+      --text:#e9ebf0; --text-2:#a2a9b8; --text-3:#727a8a;
+      --line:#24272e; --line-2:#2e323b;
+      --accent:#8b87ff; --accent-soft:#1e1c3a; --accent-fg:#0c0d10;
+      --ok:#3ddc97; --ok-soft:#10281f;
+      --wait:#6aa5ff; --wait-soft:#111d33;
+      --warn:#f0a552; --warn-soft:#2b1e10;
+      --err:#ff7b72; --err-soft:#2d1514;
+      --off:#5b6272;
+      --shadow-sm:none;
+      --shadow-md:0 8px 24px -8px rgba(0,0,0,.6);
+    }
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font:14.5px/1.55 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    letter-spacing:-0.006em;
+  }
+
+  /* ---------- header ---------- */
+  header {
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; gap:14px;
+    padding:0 24px; height:56px;
+    background:color-mix(in srgb,var(--bg) 82%,transparent);
+    backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand { display:flex; align-items:center; gap:9px; font-weight:640; font-size:15px; letter-spacing:-0.02em; }
+  .brand .mark {
+    width:20px; height:20px; border-radius:6px; flex:none;
+    background:linear-gradient(140deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#12d2b3));
+    box-shadow:0 2px 6px -1px color-mix(in srgb,var(--accent) 45%,transparent);
+  }
+  .spacer { flex:1; }
+  .meta { color:var(--text-3); font-size:12.5px; font-variant-numeric:tabular-nums; }
+
+  /* ---------- layout ---------- */
+  main { max-width:860px; margin:0 auto; padding:26px 24px 80px; }
+  .sec { display:flex; align-items:baseline; gap:10px; margin:30px 2px 12px; }
+  .sec h2 { font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin:0; font-weight:620; }
+  .sec .count { font-size:12px; color:var(--text-3); }
+
+  /* ---------- cards ---------- */
+  .card {
+    background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r);
+    padding:16px 18px; margin-bottom:10px; box-shadow:var(--shadow-sm);
+    transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+  }
+  .card:hover { border-color:var(--line-2); }
+  .row { display:flex; align-items:center; gap:13px; }
+  .grow { flex:1; min-width:0; }
+  .title { font-weight:600; font-size:15px; letter-spacing:-0.012em; line-height:1.3; }
+  .sub { color:var(--text-3); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mono { font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; }
+
+  /* ---------- status pill ---------- */
+  .pill {
+    display:inline-flex; align-items:center; gap:6px; flex:none;
+    font-size:11.5px; font-weight:600; letter-spacing:-0.005em;
+    padding:4px 10px 4px 8px; border-radius:999px;
+    background:var(--sunk); color:var(--text-2);
+  }
+  .pill .dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .pill.ok{ color:var(--ok); background:var(--ok-soft); }
+  .pill.wait{ color:var(--wait); background:var(--wait-soft); }
+  .pill.err{ color:var(--err); background:var(--err-soft); }
+  .pill.warn{ color:var(--warn); background:var(--warn-soft); }
+  .pill.off{ color:var(--off); background:var(--sunk); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+  .pill.wait .dot, .pill.run .dot { animation:pulse 1.8s ease-in-out infinite; }
+
+  /* ---------- facts ---------- */
+  .facts { display:flex; flex-wrap:wrap; gap:5px 18px; margin-top:12px; color:var(--text-3); font-size:12.5px; }
+  .facts b { color:var(--text-2); font-weight:600; }
+  .note { margin-top:10px; font-size:12.5px; color:var(--text-3); }
+  .note.err { color:var(--err); }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    border:1px solid var(--line-2); background:var(--bg-elev); color:var(--text);
+    border-radius:var(--r-sm); padding:6px 12px; font-size:13px; font-weight:530;
+    cursor:pointer; transition:all .13s ease; font-family:inherit; letter-spacing:-0.005em;
+  }
+  .btn:hover { background:var(--sunk); }
+  .btn:active { transform:translateY(.5px); }
+  .btn.primary { background:var(--accent); color:var(--accent-fg); border-color:var(--accent); }
+  .btn.primary:hover { filter:brightness(1.08); background:var(--accent); }
+  .btn.ghost { background:transparent; border-color:transparent; color:var(--text-2); }
+  .btn.ghost:hover { background:var(--sunk); color:var(--text); }
+  .btn.danger:hover { color:var(--err); background:var(--err-soft); }
+  .btn[disabled] { opacity:.5; pointer-events:none; }
+
+  /* ---------- switch ---------- */
+  .switch { position:relative; width:38px; height:22px; flex:none; }
+  .switch input { opacity:0; width:0; height:0; }
+  .slider {
+    position:absolute; inset:0; background:var(--off); border-radius:999px; cursor:pointer;
+    transition:background .18s ease;
+  }
+  .slider:before {
+    content:""; position:absolute; height:16px; width:16px; left:3px; top:3px;
+    background:#fff; border-radius:50%; transition:transform .18s cubic-bezier(.3,1.4,.5,1);
+    box-shadow:0 1px 2px rgba(0,0,0,.28);
+  }
+  .switch input:checked + .slider { background:var(--accent); }
+  .switch input:checked + .slider:before { transform:translateX(16px); }
+
+  /* ---------- form fields ---------- */
+  label.f { display:block; margin:16px 0 6px; font-size:13px; color:var(--text); font-weight:590; letter-spacing:-0.008em; }
+  .opt { color:var(--text-3); font-weight:400; font-size:11.5px; }
+  .hint { font-size:12px; color:var(--text-3); margin-top:6px; line-height:1.5; }
+  .hint b { color:var(--text-2); font-weight:600; }
+  select, input[type=text], input[type=number], input[type=datetime-local], textarea {
+    width:100%; background:var(--sunk); color:var(--text);
+    border:1px solid var(--line); border-radius:var(--r-sm);
+    padding:9px 11px; font:inherit; font-size:13.5px;
+    transition:border-color .13s ease, box-shadow .13s ease;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline:none; border-color:var(--accent);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent);
+  }
+  textarea { resize:vertical; min-height:66px; line-height:1.5; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  .grid4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:14px; }
+
+  /* ---------- segmented control ---------- */
+  .seg {
+    display:inline-flex; padding:3px; gap:3px; background:var(--sunk);
+    border:1px solid var(--line); border-radius:11px; width:100%;
+  }
+  .seg-btn {
+    flex:1; border:0; background:transparent; color:var(--text-2);
+    padding:7px 10px; border-radius:8px; font:inherit; font-size:12.5px; font-weight:560;
+    cursor:pointer; transition:all .14s ease; letter-spacing:-0.005em;
+  }
+  .seg-btn:hover { color:var(--text); }
+  .seg-btn.on {
+    background:var(--bg-elev); color:var(--text);
+    box-shadow:var(--shadow-sm); border:1px solid var(--line);
+    padding:6px 9px;
+  }
+
+  /* ---------- chips ---------- */
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .chip {
+    border:1px solid var(--line-2); background:var(--bg-elev); color:var(--accent);
+    border-radius:999px; padding:5px 11px; font-size:12px; cursor:pointer; font-weight:540;
+    transition:all .13s ease; font-family:inherit;
+  }
+  .chip:hover { background:var(--accent-soft); border-color:var(--accent); }
+  .chip-all { color:var(--warn); border-color:color-mix(in srgb,var(--warn) 40%,var(--line-2)); }
+  .chip-all:hover { background:var(--warn-soft); border-color:var(--warn); }
+  .chip-all.on { background:var(--warn); color:#fff; border-color:var(--warn); }
+
+  /* ---------- add-session disclosure ---------- */
+  details.add { padding:0; overflow:hidden; }
+  details.add > summary {
+    cursor:pointer; list-style:none; padding:14px 18px;
+    display:flex; align-items:center; gap:9px; transition:background .13s ease;
+  }
+  details.add > summary::-webkit-details-marker { display:none; }
+  details.add > summary:hover { background:var(--sunk); }
+  details.add[open] > summary { border-bottom:1px solid var(--line); }
+  .plus {
+    width:18px; height:18px; border-radius:5px; flex:none; position:relative;
+    background:var(--sunk); border:1px solid var(--line-2); transition:all .13s ease;
+  }
+  .plus:before, .plus:after {
+    content:""; position:absolute; background:var(--text-3); border-radius:1px; transition:all .18s ease;
+  }
+  .plus:before { left:4px; right:4px; top:7.5px; height:1.5px; }
+  .plus:after { top:4px; bottom:4px; left:7.5px; width:1.5px; }
+  details.add:hover .plus { border-color:var(--accent); }
+  details.add:hover .plus:before, details.add:hover .plus:after { background:var(--accent); }
+  details.add[open] .plus:after { transform:rotate(90deg); opacity:0; }
+  .addtitle { font-weight:590; font-size:14px; letter-spacing:-0.01em; }
+  .formwrap { padding:4px 18px 18px; }
+
+  /* ---------- misc ---------- */
+  .empty {
+    color:var(--text-3); padding:30px 18px; text-align:center; font-size:13.5px;
+    border:1px dashed var(--line-2); border-radius:var(--r); background:var(--bg-elev);
+  }
+  .banner {
+    display:flex; align-items:center; gap:13px; background:var(--bg-elev);
+    border:1px solid var(--line); border-left:3px solid var(--warn);
+    border-radius:var(--r); padding:14px 17px; margin-bottom:14px; box-shadow:var(--shadow-sm);
+  }
+  .banner.err { border-left-color:var(--err); }
+  .banner .t { font-weight:600; font-size:14px; }
+  .banner .s { color:var(--text-3); font-size:12.5px; margin-top:1px; }
+  .authchip { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; color:var(--text-3); }
+  .authchip .dot { width:6px; height:6px; border-radius:50%; background:var(--off); }
+  .authchip.on .dot { background:var(--ok); box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 20%,transparent); }
+  .err-note { color:var(--err); font-size:12.5px; margin-top:10px; }
+  .toast {
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(8px);
+    background:var(--text); color:var(--bg); padding:10px 17px; border-radius:10px;
+    font-size:13px; font-weight:500; opacity:0; transition:all .22s cubic-bezier(.3,1.2,.5,1);
+    pointer-events:none; box-shadow:var(--shadow-md); max-width:80vw; z-index:50;
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  @media (max-width:600px){ .grid3,.grid4 { grid-template-columns:1fr 1fr; } main{ padding:20px 14px 60px; } header{ padding:0 14px; } }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand"><span class="mark"></span>Claudify</span>
+  <span class="spacer"></span>
+  <span id="auth"></span>
+  <span class="meta" id="meta">loading…</span>
+</header>
+
+<main>
+  <div id="authbanner"></div>
+  <div class="sec"><h2>Armed sessions</h2><span class="count" id="wcount"></span></div>
+  <div id="watched"></div>
+  <div class="sec"><h2>Add a session</h2></div>
+  <div id="add"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s => (s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let editing = null;
+
+function fmtTime(iso){
+  if(!iso) return "—";
+  const d=new Date(iso); if(isNaN(d)) return "—";
+  return d.toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+}
+function rel(iso){
+  const d=Date.now()-Date.parse(iso); if(isNaN(d))return"?";
+  const m=Math.round(d/60000); if(m<1) return "just now"; if(m<60)return m+"m ago";
+  const h=Math.round(m/60); if(h<48)return h+"h ago"; return Math.round(h/24)+"d ago";
+}
+function until(iso){
+  const d=Date.parse(iso)-Date.now(); if(isNaN(d))return"";
+  if(d<=0) return "due now";
+  const m=Math.round(d/60000); if(m<60) return "in "+m+"m";
+  const h=Math.floor(m/60); const rem=m%60;
+  if(h<24) return "in "+h+"h"+(rem?" "+rem+"m":""); return "in "+Math.round(h/24)+"d";
+}
+/** Local datetime-local value (yyyy-MM-ddTHH:mm) for an offset from now. */
+function localDT(offsetMs){
+  const d=new Date(Date.now()+(offsetMs||0));
+  const p=n=>String(n).padStart(2,"0");
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes());
+}
+
+const STATUS = {
+  watching:["ok","Armed · watching"], waiting_for_reset:["wait","Waiting to resume"],
+  resuming:["wait run","Resuming…"], done:["ok","Done this cycle"], error:["err","Error"],
+  auth_needed:["err","Login needed"], expired:["off","Grant expired"], off:["off","Paused"],
+};
+
+async function api(path, body){
+  const opts = body ? {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)} : {};
+  const r = await fetch(path, opts);
+  return r.json();
+}
+let toastTimer=null;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600);
+}
+
+const PRESETS = [
+  ["Run tests","Bash(npm test:*)"], ["Git commit","Bash(git commit:*)"], ["Git add","Bash(git add:*)"],
+  ["Install deps","Bash(npm install:*)"], ["Build","Bash(npm run build:*)"],
+];
+
+function grantForm(g, sessionId, isEdit){
+  g = g || {};
+  const sel = (v,cur,def)=> (cur===v || (!cur && def)) ? " selected" : "";
+  const allow = (g.allowedTools||[]).join(", ");
+  const allOn = g.permissionMode==="bypassPermissions" ? " on" : "";
+  const chips = '<button type="button" class="chip chip-all'+allOn+'" data-act="allowall">⚡ All tools (full control)</button>' +
+    PRESETS.map(p=>'<button type="button" class="chip" data-act="preset" data-pattern="'+esc(p[1])+'">'+esc(p[0])+'</button>').join("");
+  const isSched = g.trigger==="scheduled";
+  const schedVal = isSched && g.scheduledAt ? localDT(Date.parse(g.scheduledAt)-Date.now()) : localDT(3*3600e3);
+
+  return `
+    <label class="f">When should it resume?</label>
+    <div class="seg" data-k="trigger" data-value="${isSched?"scheduled":"limit"}">
+      <button type="button" class="seg-btn${isSched?"":" on"}" data-act="trigger" data-val="limit">When it hits the limit</button>
+      <button type="button" class="seg-btn${isSched?" on":""}" data-act="trigger" data-val="scheduled">At a set time</button>
+    </div>
+    <div data-role="sched" style="display:${isSched?"block":"none"}">
+      <label class="f">Resume at</label>
+      <input type="datetime-local" data-k="scheduledAt" value="${schedVal}" />
+      <div class="hint">Use this if you're <b>close to your limit but haven't hit it</b> — set your reset time and it fires then, no limit message needed.</div>
+    </div>
+    <div data-role="limithint" class="hint" style="display:${isSched?"none":"block"}">
+      Nothing runs until this session actually hits its limit. Once it does, Claudify reads the reset time and resumes on its own — you don't need to be here.
+    </div>
+
+    <label class="f">How much can it do on its own?</label>
+    <select data-k="mode">
+      <option value="plan"${sel("plan",g.permissionMode,false)}>Just plan — read and think only, change nothing</option>
+      <option value="acceptEdits"${sel("acceptEdits",g.permissionMode,true)}>Edit files — write code, pause before running commands</option>
+      <option value="dontAsk"${sel("dontAsk",g.permissionMode,false)}>Run freely — only the commands you allow below</option>
+      <option value="bypassPermissions"${sel("bypassPermissions",g.permissionMode,false)}>Full autonomy — do anything, no guardrails</option>
+    </select>
+    <div class="hint">Most people pick <b>Edit files</b>. It writes code freely; it just won't run terminal commands unless allowed below.</div>
+
+    <label class="f">Commands it may run without pausing <span class="opt">optional</span></label>
+    <div class="chips">${chips}</div>
+    <input type="text" data-k="allow" placeholder="Click a chip above, or leave blank" value="${esc(allow)}" />
+    <div class="hint">Leave blank and it still edits files — it just stops when it needs the terminal. <b>All tools</b> gives it full control to run anything with no prompts.</div>
+
+    <div class="grid4">
+      <div>
+        <label class="f">Work per resume</label>
+        <input type="number" data-k="maxTurns" value="${g.maxTurnsPerResume||50}" />
+        <div class="hint">Steps each time. ~50 ≈ a full session.</div>
+      </div>
+      <div>
+        <label class="f">Times to continue</label>
+        <input type="number" data-k="maxResumes" value="${g.maxResumes||g.maxResumesPerLimitCycle||3}" />
+        <div class="hint">If it hits the limit again, how many more resumes.</div>
+      </div>
+      <div>
+        <label class="f">Spend limit</label>
+        <input type="number" step="0.5" min="0" data-k="maxSpendUsd" placeholder="$ none" value="${g.maxSpendUsd?g.maxSpendUsd:5}" />
+        <div class="hint">Pauses after $ spent. Blank = no cap.</div>
+      </div>
+      <div>
+        <label class="f">Turn off after</label>
+        <input type="text" data-k="expiresIn" placeholder="12h" value="12h" />
+        <div class="hint">Safety timer, e.g. 8h, 2d.</div>
+      </div>
+    </div>
+
+    <label class="f">What's the goal for this session? <span class="opt">optional</span></label>
+    <textarea data-k="prompt" placeholder="e.g. 'Finish the login screen and get the tests passing.' Leave blank to just continue where you left off.">${esc(isEdit?(g.goal||""):"")}</textarea>
+    <div class="hint">Treated as a goal, not a script — each resume reviews what's already done and won't repeat finished work, then stops once the goal is met.</div>
+
+    <div class="row" style="margin-top:16px;justify-content:flex-end;gap:8px">
+      <button class="btn ghost" data-act="cancel">Cancel</button>
+      <button class="btn primary" data-act="save" data-sid="${sessionId}">${isEdit?"Save changes":"Turn on auto-resume"}</button>
+    </div>
+    <div class="err-note" data-role="err" style="display:none"></div>`;
+}
+
+function collectGrant(root){
+  const get = k => { const el=root.querySelector('[data-k="'+k+'"]'); return el?el.value:""; };
+  const segEl = root.querySelector('[data-k="trigger"]');
+  const trigger = segEl ? segEl.getAttribute("data-value") : "limit";
+  return {
+    trigger,
+    scheduledAt: trigger==="scheduled" ? get("scheduledAt") : undefined,
+    mode:get("mode"), allow:get("allow"),
+    maxTurns:Number(get("maxTurns"))||50, maxResumes:Number(get("maxResumes"))||3,
+    maxSpendUsd:Number(get("maxSpendUsd"))||0,
+    expiresIn:get("expiresIn")||"12h", prompt:get("prompt"),
+    acceptFullAutonomy: get("mode")==="bypassPermissions"
+      ? confirm("Full control lets this session run ANY tool unattended, with no guardrails. Continue?") : false,
+  };
+}
+
+function renderWatched(list){
+  const box = $("#watched");
+  $("#wcount").textContent = list.length ? "" : "";
+  if(!list.length){
+    box.innerHTML = '<div class="empty">Nothing armed yet. Pick a session below to have Claudify resume it for you.</div>';
+    return;
+  }
+  box.innerHTML = list.map(s=>{
+    const st = STATUS[s.status]||["off",s.status];
+    const isEdit = editing===s.sessionId;
+    const sched = s.trigger==="scheduled";
+    const when = s.resetAt ? (fmtTime(s.resetAt)+" · "+until(s.resetAt)) : (sched?"—":"when it hits the limit");
+    const denied = s.lastRun && s.lastRun.permissionDenials && s.lastRun.permissionDenials.length;
+    const last = s.lastRun
+      ? ("Last run "+rel(s.lastRun.at)+" · "+s.lastRun.numTurns+" turns"
+         +(s.lastRun.costUsd?" · $"+s.lastRun.costUsd.toFixed(2):"")
+         +(s.lastRun.terminalReason?" · "+s.lastRun.terminalReason:"")
+         +(denied?" · "+denied+" blocked":""))
+      : "No runs yet";
+    const spend = s.maxSpendUsd
+      ? "spent <b>$"+(s.spentUsd||0).toFixed(2)+" / $"+s.maxSpendUsd.toFixed(2)+"</b>"
+      : "spent <b>$"+(s.spentUsd||0).toFixed(2)+"</b>";
+    return `<div class="card" data-sid="${s.sessionId}">
+      <div class="row">
+        <label class="switch"><input type="checkbox" data-act="toggle" ${s.enabled?"checked":""}/><span class="slider"></span></label>
+        <div class="grow">
+          <div class="title">${esc(s.title)}</div>
+          <div class="sub">${esc(s.projectName)} · ${s.shortId} · ${sched?"scheduled":"on limit"}</div>
+        </div>
+        <span class="pill ${st[0]}"><span class="dot"></span>${st[1]}</span>
+      </div>
+      <div class="facts mono">
+        <span>${sched?"fires":"resumes"} <b>${when}</b></span>
+        <span>continues <b>${s.resumesThisCycle}/${s.maxResumes}</b></span>
+        <span>${spend}</span>
+        <span>access <b>${s.permissionMode==="bypassPermissions"?"all tools":s.permissionMode}</b></span>
+        <span>off <b>${fmtTime(s.expiresAt)}</b></span>
+      </div>
+      ${s.lastError?`<div class="note err">${esc(s.lastError)}</div>`:`<div class="note">${esc(last)}</div>`}
+      <div class="row" style="margin-top:13px;gap:8px">
+        <button class="btn" data-act="resumenow">Resume now</button>
+        <button class="btn ghost" data-act="edit">${isEdit?"Close":"Edit"}</button>
+        <span class="spacer grow"></span>
+        <button class="btn ghost danger" data-act="remove">Remove</button>
+      </div>
+      ${isEdit?`<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:6px" data-role="form">${grantForm(s,s.sessionId,true)}</div>`:""}
+    </div>`;
+  }).join("");
+}
+
+function renderAdd(list){
+  const box = $("#add");
+  if(!list.length){ box.innerHTML = '<div class="empty">No other Claude sessions found.</div>'; return; }
+  box.innerHTML = list.map(s=>
+    '<details class="add card" data-sid="'+s.sessionId+'">'+
+      '<summary><span class="plus"></span><span class="addtitle">'+esc(s.title)+'</span>'+
+      '<span class="sub"> · '+esc(s.projectName)+' · '+rel(s.lastActivity)+'</span></summary>'+
+      '<div class="formwrap" data-role="form">'+grantForm(null,s.sessionId,false)+'</div>'+
+    '</details>').join("");
+}
+
+function typing(){ const a=document.activeElement; return a && (a.tagName==="TEXTAREA"||a.tagName==="INPUT"||a.tagName==="SELECT"); }
+function addFormOpen(){ return !!document.querySelector('#add details[open]'); }
+
+let lastAuthHint = null;
+async function refreshAuth(){
+  try{
+    const a = await api("/api/auth");
+    lastAuthHint = a;
+    const chip = $("#auth");
+    if(a.loggedIn){
+      chip.className="authchip on";
+      chip.innerHTML='<span class="dot"></span>'+esc(a.email||"connected");
+    }else{
+      chip.className="authchip";
+      chip.innerHTML='<button class="btn" data-act="connect">Connect Claude Code</button>';
+    }
+  }catch(e){ /* keep last known */ }
+}
+
+function renderBanner(watched){
+  const box = $("#authbanner");
+  const needsAuth = watched.some(s=>s.status==="auth_needed");
+  const neverConnected = lastAuthHint && !lastAuthHint.loggedIn;
+  if(needsAuth){
+    box.innerHTML = '<div class="banner err"><div class="grow"><div class="t">Claude Code login expired</div>'+
+      '<div class="s">A resume couldn\'t authenticate. Reconnect, then switch the session back on.</div></div>'+
+      '<button class="btn primary" data-act="connect">Reconnect</button>'+
+      '<button class="btn ghost" data-act="authtest">Test</button></div>';
+  }else if(neverConnected){
+    box.innerHTML = '<div class="banner"><div class="grow"><div class="t">Connect Claude Code to enable auto-resume</div>'+
+      '<div class="s">Signs in with your Claude subscription. A browser window opens to approve.</div></div>'+
+      '<button class="btn primary" data-act="connect">Connect Claude Code</button></div>';
+  }else{ box.innerHTML = ""; }
+}
+
+async function refresh(){
+  try{
+    const st = await api("/api/state");
+    const armed = st.watched.filter(w=>w.enabled).length;
+    $("#meta").textContent = armed+" armed · "+st.watched.length+" total";
+    renderBanner(st.watched);
+    if(!typing() && editing===null) renderWatched(st.watched);
+    if(!typing() && !addFormOpen()) renderAdd(st.available);
+  }catch(e){
+    $("#meta").textContent = "server unreachable";
+  }
+}
+
+document.addEventListener("click", async (e)=>{
+  const act = e.target.getAttribute && e.target.getAttribute("data-act");
+  if(!act) return;
+  const card = e.target.closest("[data-sid]");
+  const sid = card && card.getAttribute("data-sid");
+
+  if(act==="toggle"){
+    const r=await api("/api/toggle",{sessionId:sid,enabled:e.target.checked});
+    if(!r.ok) toast(r.error||"Couldn't change that");
+    refresh(); return;
+  }
+  if(act==="remove"){
+    if(confirm("Stop watching this session?")){ await api("/api/remove",{sessionId:sid}); editing=null; refresh(); }
+    return;
+  }
+  if(act==="trigger"){
+    e.preventDefault();
+    const form = e.target.closest('[data-role="form"]'); if(!form) return;
+    const seg = form.querySelector('[data-k="trigger"]');
+    const val = e.target.getAttribute("data-val");
+    seg.setAttribute("data-value", val);
+    seg.querySelectorAll(".seg-btn").forEach(b=>b.classList.toggle("on", b.getAttribute("data-val")===val));
+    const schedBlock = form.querySelector('[data-role="sched"]');
+    const limitHint  = form.querySelector('[data-role="limithint"]');
+    if(schedBlock) schedBlock.style.display = val==="scheduled" ? "block" : "none";
+    if(limitHint)  limitHint.style.display  = val==="scheduled" ? "none" : "block";
+    return;
+  }
+  if(act==="preset"){
+    e.preventDefault();
+    const form = e.target.closest('[data-role="form"]'); if(!form) return;
+    const input = form.querySelector('[data-k="allow"]');
+    if(input){
+      const pat = e.target.getAttribute("data-pattern");
+      const cur = input.value.split(",").map(x=>x.trim()).filter(Boolean);
+      if(!cur.includes(pat)) cur.push(pat);
+      input.value = cur.join(", ");
+      const modeSel = form.querySelector('[data-k="mode"]');
+      if(modeSel && modeSel.value==="bypassPermissions") modeSel.value="acceptEdits";
+      const allBtn = form.querySelector('.chip-all'); if(allBtn) allBtn.classList.remove("on");
+    }
+    return;
+  }
+  if(act==="allowall"){
+    e.preventDefault();
+    const form = e.target.closest('[data-role="form"]'); if(!form) return;
+    const modeSel = form.querySelector('[data-k="mode"]');
+    if(e.target.classList.contains("on")){
+      if(modeSel) modeSel.value="acceptEdits";
+      e.target.classList.remove("on");
+    }else{
+      if(modeSel) modeSel.value="bypassPermissions";
+      e.target.classList.add("on");
+      toast("Full control: it can run any tool with no prompts. You'll confirm on save.");
+    }
+    return;
+  }
+  if(act==="resumenow"){
+    const btn = e.target; const old = btn.textContent;
+    btn.disabled = true; btn.textContent = "Resuming…";
+    toast("Resuming now — this may take a minute.");
+    try{
+      const r = await api("/api/resume-now",{sessionId:sid});
+      toast(r.ok ? ("Resumed ✓ "+r.summary) : ("Couldn't resume: "+(r.error||"unknown")));
+    }catch(err){ toast("Couldn't reach Claudify: "+err.message); }
+    btn.disabled = false; btn.textContent = old;
+    refresh(); return;
+  }
+  if(act==="connect"){
+    let r; try{ r = await api("/api/connect",{}); }catch(err){ toast("Couldn't reach Claudify: "+err.message); return; }
+    if(r && r.ok){
+      toast("Opening your browser to sign in — approve there, then come back.");
+      setTimeout(refreshAuth,4000); setTimeout(refreshAuth,10000); setTimeout(refreshAuth,20000);
+    }else{
+      toast("Couldn't launch sign-in: "+((r&&r.error)||"claude not found")+". Try: claude auth login");
+    }
+    return;
+  }
+  if(act==="authtest"){
+    toast("Testing connection…");
+    const r = await api("/api/auth-test",{});
+    toast(r.ok ? ("Connected ✓ "+r.detail) : ("Still failing: "+r.detail));
+    refreshAuth(); return;
+  }
+  if(act==="edit"){ editing = editing===sid?null:sid; refresh(); return; }
+  if(act==="cancel"){
+    editing=null;
+    if(card && card.tagName==="DETAILS") card.open=false;
+    refresh(); return;
+  }
+  if(act==="save"){
+    e.preventDefault();
+    const form = e.target.closest('[data-role="form"]');
+    const sidToSave = e.target.getAttribute("data-sid");
+    if(!form || !sidToSave){ toast("Could not read the form — please reopen the session."); return; }
+    const showErr = (msg)=>{
+      const n=form.querySelector('[data-role="err"]');
+      if(n){ n.style.display="block"; n.textContent=msg; } else { toast(msg); }
+    };
+    let r;
+    try{ r = await api("/api/watch", Object.assign({sessionId:sidToSave}, collectGrant(form))); }
+    catch(err){ showErr("Couldn't reach Claudify: "+err.message); return; }
+    if(!r || !r.ok){ showErr((r && r.error) || "Failed to turn on auto-resume."); return; }
+    editing=null; toast("Saved — auto-resume is on"); refresh();
+  }
+});
+
+refreshAuth();
+refresh();
+setInterval(refresh, 4000);
+setInterval(refreshAuth, 30000);
+</script>
+</body>
+</html>

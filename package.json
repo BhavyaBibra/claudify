@@ -1,0 +1,62 @@
+{
+  "name": "@bhavyabibra/claudify",
+  "version": "0.1.0",
+  "description": "Auto-resume your Claude Code sessions the moment your usage limit resets \u2014 opt-in, consent-gated, and driven by a Claude-authored away plan.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "automation",
+    "scheduler",
+    "daemon",
+    "cli"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "claudify": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "skill",
+    "README.md",
+    "SECURITY.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  },
+  "author": "Bhavya Bibra <bhavyabibra100@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BhavyaBibra/claudify.git"
+  },
+  "homepage": "https://github.com/BhavyaBibra/claudify#readme",
+  "bugs": {
+    "url": "https://github.com/BhavyaBibra/claudify/issues"
+  },
+  "os": [
+    "darwin"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
