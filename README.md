@@ -15,9 +15,9 @@ already writes to `~/.claude/projects/`.
 
 ## How it works
 
-1. **You opt a session in.** In a Claude Code session, run `/away` (or
-   `claudify watch`). Claude asks what to work on, writes an away plan, and
-   registers the session — with you confirming exactly what it may do unattended.
+1. **You opt a session in.** In the dashboard, pick a session and set what it may
+   do unattended (or, for a checklist-driven away plan, run `/away` inside a
+   Claude Code session). Nothing runs without your explicit grant.
 2. **The daemon watches.** It tails the session's transcript. When it sees
    `You've hit your session limit · resets 6pm (Asia/Calcutta)`, it computes the
    reset time — spending zero quota to do so.
@@ -27,41 +27,85 @@ already writes to `~/.claude/projects/`.
    the task queue, appends progress, and stops.
 4. **You get a notification** and a morning-readable log of what happened.
 
-## Install
+## Quick start
+
+Everything below is done from the **dashboard** (a local web page) — no need to
+live in the terminal after install.
+
+### 1. Install
 
 ```bash
-npm install -g claudify
-claudify doctor            # preflight checks
-claudify doctor --auth     # also verify login (spends a little quota)
-claudify init-skill        # install the /away command into Claude Code
-claudify daemon install    # start the background daemon (macOS launchd)
+npm install -g @bhavyabibra/claudify
 ```
 
-> **Auth note:** the standalone `claude` CLI needs its own login. If
-> `claudify doctor --auth` fails with a 401, run `claude` in a terminal, complete
-> `/login`, and retry. (Logging into Claude Desktop is not enough.)
+Requires **Node.js ≥ 20** and the **Claude Code CLI** (`claude`) installed.
 
-## Use
-
-In any Claude Code project you want to keep progressing while away:
-
-```
-/away
-```
-
-Answer a few questions (objective, tasks, constraints, permission level, caps).
-That's it — close the laptop (leave it on, ideally on AC power).
-
-Or register a session directly:
+### 2. Start the daemon (the background watcher)
 
 ```bash
-claudify watch                       # interactive: pick a session, set the grant
-claudify list                        # see what's watched and each state
-claudify status                      # daemon + upcoming resumes
-claudify logs -f                     # follow activity
-claudify off <id>                    # pause a session   (claudify on <id> to resume)
-claudify remove <id>                 # stop watching entirely
+claudify daemon install
 ```
+
+On **macOS** this registers a launchd agent that runs at login, restarts on
+crash, and hosts the dashboard for you. On **Windows/Linux**, run
+`claudify daemon run` instead and keep it running (see [Platform support](#platform-support-honest-status)).
+
+### 3. Open the dashboard
+
+```bash
+claudify dashboard
+```
+
+This opens **http://127.0.0.1:4177** in your browser. Bookmark it — it's your
+control panel. (If the daemon is already hosting it, this just opens the tab.)
+
+### 4. Connect Claude Code
+
+Click **Connect Claude Code** in the dashboard. A browser window opens; approve
+it. This signs Claudify in with your Claude subscription — a **one-time** step.
+
+> Claudify needs the standalone `claude` CLI's own login, which is separate from
+> the Claude desktop app. The **Connect** button handles it; you don't need a
+> terminal. (Under the hood it runs `claude auth login`.)
+
+### 5. Arm a session
+
+In **Add a session**, you'll see your recent Claude conversations — the same list
+as your Claude app sidebar. Click one and set:
+
+- **When to resume** — *when it hits the limit* (the default) or *at a set time*
+  (useful if you're near your limit but haven't hit it yet and know your reset time)
+- **How much it can do** — *plan* / *edit files* (recommended) / *run freely* /
+  *all tools*
+- **Spend limit**, **work per resume**, **times to continue**, **turn off after**
+- Optionally, **a goal** (what to work on) — treated as an objective, not a
+  script, so repeated resumes won't redo finished work
+
+Click **Turn on auto-resume**. That's it — walk away.
+
+When your limit resets, Claudify resumes the session, and the continued
+conversation shows up right back in your Claude app. You'll get a notification
+with what ran.
+
+> **Leave your machine on** (and ideally on AC power) for overnight resumes — a
+> sleeping laptop can't run the resume.
+
+## Everyday controls
+
+Mostly you'll use the dashboard, but everything is scriptable too:
+
+```bash
+claudify list                 # what's armed and each state
+claudify status               # daemon health + upcoming resumes
+claudify logs -f              # follow activity live
+claudify on <id>              # re-enable a session
+claudify off <id>             # pause a session
+claudify remove <id>          # stop watching entirely
+claudify doctor               # preflight checks (--auth also tests login)
+```
+
+The dashboard also has a **Resume now** button on each armed session, to trigger
+a resume immediately (handy for testing or a manual nudge).
 
 ## The permission grant
 
@@ -94,9 +138,9 @@ log, so the next run — or you, in the morning — picks up cleanly.
 
 ## Requirements
 
-- **macOS** — see the platform note below
+- macOS, Windows, or Linux — see [platform support](#platform-support-honest-status)
 - Node.js ≥ 20
-- Claude Code CLI (`claude`) installed and logged in
+- Claude Code CLI (`claude`) installed (the dashboard's **Connect** button logs it in)
 - A Claude plan with session limits (Pro/Max)
 
 ### Platform support (honest status)
@@ -133,9 +177,14 @@ session API, only the driver changes.
 
 ## Status
 
-v0.1 — the core loop is built and unit-tested end to end against a fake `claude`
-shim. See [docs/VERIFIED.md](docs/VERIFIED.md) for what was empirically confirmed
-on real hardware and what still needs a live end-to-end run.
+**v0.1 — published and proven live.** The full loop has been verified end to end
+on real hardware: limit detection, scheduled and on-limit triggers, real headless
+resumes that reappear in the Claude desktop app, spend caps, and idempotent
+continuation. Available on npm as
+[`@bhavyabibra/claudify`](https://www.npmjs.com/package/@bhavyabibra/claudify).
+
+Known limitation: auto-start installers for Windows/Linux aren't built yet (the
+daemon runs there via `claudify daemon run`). Contributions welcome.
 
 ## License
 
