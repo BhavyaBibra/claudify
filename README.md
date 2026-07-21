@@ -1,6 +1,19 @@
-# Claudify
+<p align="center">
+  <img src="assets/logo.svg" width="84" height="84" alt="Claudify logo" />
+</p>
 
-**Auto-resume your Claude Code sessions the moment your usage limit resets — opt-in, consent-gated, and driven by a Claude-authored away plan.**
+<h1 align="center">Claudify</h1>
+
+<p align="center">
+  <b>Auto-resume your Claude Code sessions the moment your usage limit resets</b><br/>
+  opt-in, consent-gated, and driven by a Claude-authored away plan.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@bhavyabibra/claudify"><img src="https://img.shields.io/npm/v/@bhavyabibra/claudify?color=6355ff&label=npm" alt="npm version" /></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A520-6355ff" alt="node >= 20" />
+  <img src="https://img.shields.io/badge/license-MIT-6355ff" alt="MIT" />
+</p>
 
 You hit your session limit at 11pm. Instead of the session sitting dead until you
 wake up and type "continue," Claudify resumes it for you the second your quota

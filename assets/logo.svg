@@ -1,0 +1,17 @@
+<svg width="96" height="96" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Claudify">
+  <defs>
+    <linearGradient id="cl-bg" x1="4" y1="2" x2="44" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7B6CFF"/>
+      <stop offset="0.55" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#12D2B3"/>
+    </linearGradient>
+  </defs>
+  <!-- app-icon tile -->
+  <rect x="0" y="0" width="48" height="48" rx="13" fill="url(#cl-bg)"/>
+  <rect x="0.5" y="0.5" width="47" height="47" rx="12.5" fill="none" stroke="#fff" stroke-opacity="0.14"/>
+  <!-- the "C" = a reset/resume loop, opening to the right -->
+  <path d="M35.15 13.96 A15 15 0 1 0 35.15 34.04"
+        fill="none" stroke="#fff" stroke-width="5.1" stroke-linecap="round"/>
+  <!-- play triangle in the mouth of the C = resume / continue -->
+  <path d="M21 15.7 L33.2 24 L21 32.3 Z" fill="#fff"/>
+</svg>
