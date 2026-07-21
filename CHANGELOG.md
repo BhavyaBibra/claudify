@@ -3,9 +3,21 @@
 All notable changes to Claudify are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this project uses SemVer.
 
-## [0.1.0] — unreleased
+## [0.1.1]
 
-Initial release.
+### Added
+- Original Claudify logo — a reset/resume loop forming a "C" with a play triangle
+  in its mouth — in the dashboard header, as the favicon, and in the README.
+
+### Changed
+- Dashboard redesign: dark-first, navy-tinted palette with ambient accent glow
+  and a faint dev-grid texture; elevated cards with hover lift, gradient primary
+  buttons, glowing status dots, refined chips and empty states (light mode kept
+  clean). No functional changes.
+
+## [0.1.0]
+
+Initial public release (npm: `@bhavyabibra/claudify`).
 
 ### Added
 - Headless auto-resume of Claude Code sessions after a usage-limit reset, using

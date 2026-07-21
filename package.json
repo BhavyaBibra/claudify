@@ -1,7 +1,7 @@
 {
   "name": "@bhavyabibra/claudify",
-  "version": "0.1.0",
-  "description": "Auto-resume your Claude Code sessions the moment your usage limit resets \u2014 opt-in, consent-gated, and driven by a Claude-authored away plan.",
+  "version": "0.1.1",
+  "description": "Auto-resume your Claude Code sessions the moment your usage limit resets — opt-in, consent-gated, and driven by a Claude-authored away plan.",
   "keywords": [
     "claude",
     "claude-code",
