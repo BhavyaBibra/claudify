@@ -27,8 +27,16 @@ export function runDaemonForeground(): void {
 
 export function runDaemonInstall(): void {
   if (!isDarwin()) {
-    console.log("Automatic daemon management needs macOS/launchd.");
-    console.log("On other platforms, run `claudify daemon run` under your own process manager.");
+    console.log("Auto-start install is macOS-only for now (uses launchd).");
+    console.log("Claudify still works here — keep the daemon running with:");
+    console.log("    claudify daemon run");
+    if (process.platform === "win32") {
+      console.log("\nTo start it automatically on Windows, register that command with Task Scheduler");
+      console.log("(Create Task → Trigger: At log on → Action: `claudify daemon run`).");
+    } else {
+      console.log("\nTo start it automatically on Linux, add a systemd user service running");
+      console.log("`claudify daemon run` (or add it to your session autostart).");
+    }
     return;
   }
   const p = installAgent();

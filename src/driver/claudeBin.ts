@@ -19,30 +19,47 @@ function isExecutableFile(p: string): boolean {
   }
 }
 
+/** File names the `claude` CLI may have, per platform. */
+function claudeNames(): string[] {
+  return process.platform === "win32"
+    ? ["claude.cmd", "claude.exe", "claude.bat", "claude"]
+    : ["claude"];
+}
+
 /** Absolute path to `claude`, or the bare name "claude" if nothing is found. */
 export function claudeBin(): string {
   if (process.env.CLAUDIFY_CLAUDE_BIN) return process.env.CLAUDIFY_CLAUDE_BIN;
   if (cached) return cached;
 
   const home = os.homedir();
-  const candidates: string[] = [];
+  const names = claudeNames();
+  const dirs: string[] = [];
 
   // 1. Whatever is on the current PATH (honors custom installs).
   for (const dir of (process.env.PATH ?? "").split(path.delimiter)) {
-    if (dir) candidates.push(path.join(dir, "claude"));
+    if (dir) dirs.push(dir);
   }
-  // 2. Well-known Claude Code install locations (the launchd fallback path).
-  candidates.push(
-    path.join(home, ".local", "bin", "claude"),
-    "/opt/homebrew/bin/claude",
-    "/usr/local/bin/claude",
-    path.join(home, ".claude", "local", "claude"),
-  );
+  // 2. Well-known Claude Code install locations per platform.
+  if (process.platform === "win32") {
+    const appdata = process.env.APPDATA || path.join(home, "AppData", "Roaming");
+    const local = process.env.LOCALAPPDATA || path.join(home, "AppData", "Local");
+    dirs.push(path.join(appdata, "npm"), path.join(local, "Claude", "bin"), path.join(home, ".local", "bin"));
+  } else {
+    dirs.push(
+      path.join(home, ".local", "bin"),
+      "/opt/homebrew/bin",
+      "/usr/local/bin",
+      path.join(home, ".claude", "local"),
+    );
+  }
 
-  for (const c of candidates) {
-    if (isExecutableFile(c)) {
-      cached = c;
-      return c;
+  for (const dir of dirs) {
+    for (const name of names) {
+      const c = path.join(dir, name);
+      if (isExecutableFile(c)) {
+        cached = c;
+        return c;
+      }
     }
   }
   return "claude";

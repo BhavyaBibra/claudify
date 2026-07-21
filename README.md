@@ -101,19 +101,20 @@ log, so the next run — or you, in the morning — picks up cleanly.
 
 ### Platform support (honest status)
 
-**Claudify is macOS-only today.** The core — scheduler, watchlist, limit
-detection, and the dashboard UI (it's a local web page) — is cross-platform, but
-four pieces of OS glue are macOS-specific:
+Claudify **runs on macOS, Windows, and Linux** — session detection, resumes, the
+desktop-app session list, the dashboard, and notifications are all
+platform-aware. The one thing that isn't fully automated everywhere is the
+**always-on daemon**:
 
-| Piece | Windows/Linux status |
-|---|---|
-| Desktop-app session list | Reads the macOS `~/Library/Application Support/Claude/…` store |
-| Always-on daemon | Uses launchd; Windows needs Task Scheduler |
-| Locating the `claude` binary | Looks in Unix install paths |
-| Notifications | Uses `osascript` (degrades to a log line elsewhere) |
+| Piece | macOS | Windows / Linux |
+|---|---|---|
+| Session list, resumes, binary lookup, dashboard | ✅ | ✅ |
+| Notifications | osascript | PowerShell toast / `notify-send` |
+| Auto-start the daemon at login | ✅ `claudify daemon install` (launchd) | Run `claudify daemon run`, wired into Task Scheduler (Windows) or a systemd user service (Linux) |
 
-Windows support is planned and well-scoped (those four files are isolated behind
-small interfaces), but it does not work there yet. Contributions welcome.
+So on Windows/Linux everything works; you just start the daemon yourself (one
+command, or wire it into your OS's startup). Native auto-start installers for
+those platforms are a welcome contribution.
 
 ## Development
 

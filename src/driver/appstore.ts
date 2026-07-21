@@ -35,13 +35,16 @@ export interface AppStoreSession {
 /** Root of the desktop app's session store (override via env for tests). */
 export function appStoreRoot(): string {
   if (process.env.CLAUDIFY_APPSTORE_DIR) return process.env.CLAUDIFY_APPSTORE_DIR;
-  return path.join(
-    os.homedir(),
-    "Library",
-    "Application Support",
-    "Claude",
-    "claude-code-sessions",
-  );
+  const home = os.homedir();
+  const leaf = ["Claude", "claude-code-sessions"];
+  switch (process.platform) {
+    case "darwin":
+      return path.join(home, "Library", "Application Support", ...leaf);
+    case "win32":
+      return path.join(process.env.APPDATA || path.join(home, "AppData", "Roaming"), ...leaf);
+    default: // linux / other
+      return path.join(process.env.XDG_CONFIG_HOME || path.join(home, ".config"), ...leaf);
+  }
 }
 
 /** Whether the desktop app store is present on this machine. */
